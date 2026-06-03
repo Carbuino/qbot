@@ -1,10 +1,12 @@
-import { TextChannel } from 'discord.js';
-import { config } from '../config';
-import { discordClient, robloxClient, robloxGroup } from '../main';
+import {
+    TextChannel,
+} from 'discord.js';
+import { config } from '../config.ts';
+import { discordClient, robloxClient, robloxGroup } from '../main.ts';
 import {
     getMemberCountMessage,
     getMemberCountMilestoneEmbed,
-} from '../handlers/locale';
+} from '../handlers/locale.ts';
 
 let firstRecord = true;
 let lastRemainder: number;

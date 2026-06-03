@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
-import { DatabaseProvider } from '../structures/DatabaseProvider';
-import { DatabaseUser } from '../structures/types';
-require('dotenv').config();
+import { DatabaseProvider } from '../structures/DatabaseProvider.ts';
+import type { DatabaseUser } from '../structures/types.d.ts';
+import 'dotenv/config';
 
 class PrismaProvider extends DatabaseProvider {
     db: PrismaClient;

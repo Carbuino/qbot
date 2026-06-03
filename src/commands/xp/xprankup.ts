@@ -1,6 +1,6 @@
-import { discordClient, robloxClient, robloxGroup } from '../../main';
-import { CommandContext } from '../../structures/addons/CommandAddons';
-import { Command } from '../../structures/Command';
+import { discordClient, robloxClient, robloxGroup } from '../../main.ts';
+import { CommandContext } from '../../structures/addons/CommandAddons.ts';
+import { Command } from '../../structures/Command.ts';
 import {
     getInvalidRobloxUserEmbed,
     getRobloxUserIsNotMemberEmbed,
@@ -11,14 +11,14 @@ import {
     getSuccessfulXPRankupEmbed,
     getNoRankupAvailableEmbed,
     getNoPermissionEmbed,
-} from '../../handlers/locale';
-import { checkActionEligibility } from '../../handlers/verificationChecks';
-import { config } from '../../config';
-import { User, PartialUser, GroupMember } from 'bloxy/dist/structures';
-import { logAction } from '../../handlers/handleLogging';
-import { getLinkedRobloxUser } from '../../handlers/accountLinks';
-import { provider } from '../../database';
-import { findEligibleRole } from '../../handlers/handleXpRankup';
+} from '../../handlers/locale.ts';
+import { checkActionEligibility } from '../../handlers/verificationChecks.ts';
+import { config } from '../../config.ts';
+import type { User, PartialUser, GroupMember } from '../../structures/types.d.ts';
+import { logAction } from '../../handlers/handleLogging.ts';
+import { getLinkedRobloxUser } from '../../handlers/accountLinks.ts';
+import { provider } from '../../database/index.ts';
+import { findEligibleRole } from '../../handlers/handleXpRankup.ts';
 
 class XPRankupCommand extends Command {
     constructor() {
@@ -93,7 +93,7 @@ class XPRankupCommand extends Command {
         try {
             await robloxGroup.updateMember(robloxUser.id, role.id);
             ctx.reply({ embeds: [ await getSuccessfulXPRankupEmbed(robloxUser, role.name) ]});
-            logAction('XP Rankup', ctx.user, null, robloxUser, `${robloxMember.role.name} (${robloxMember.role.rank}) → ${role.name} (${role.rank})`);
+            logAction('XP Rankup', ctx.user, null, robloxUser, `${robloxMember.role.name} (${robloxMember.role.rank}) ? ${role.name} (${role.rank})`);
         } catch (err) {
             console.log(err);
             return ctx.reply({ embeds: [ getUnexpectedErrorEmbed() ]});

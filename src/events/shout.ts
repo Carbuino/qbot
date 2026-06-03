@@ -1,7 +1,9 @@
-import { TextChannel } from 'discord.js';
-import { discordClient, robloxClient } from '../main';
-import { config } from '../config';
-import { getShoutLogEmbed } from '../handlers/locale';
+import {
+    TextChannel,
+} from 'discord.js';
+import { discordClient, robloxClient } from '../main.ts';
+import { config } from '../config.ts';
+import { getShoutLogEmbed } from '../handlers/locale.ts';
 let firstShout = true;
 let lastShout: string;
 
@@ -12,12 +14,12 @@ const recordShout = async () => {
         if(firstShout) {
             firstShout = false;
         } else {
-            if(group.shout !== null && lastShout !== group.shout.content) {
+            if(group.shout !== null && lastShout !== group.shout?.body) {
                 logChannel.send({ embeds: [ await getShoutLogEmbed(group.shout) ] });
             }
         }
         setTimeout(recordShout, 60 * 1000);
-        if(group.shout?.content) lastShout = group.shout?.content;
+        if(group.shout?.body) lastShout = group.shout?.body;
     } catch (err) {
         console.error(err);
     }

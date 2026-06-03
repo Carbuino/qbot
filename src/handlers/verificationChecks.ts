@@ -1,6 +1,6 @@
-import { GroupMember, User } from 'bloxy/dist/structures';
-import { robloxGroup } from '../main';
-import { getLinkedRobloxUser } from './accountLinks';
+import type { GroupMember, User } from '../structures/types.d.ts';
+import { robloxGroup } from '../main.ts';
+import { getLinkedRobloxUser } from './accountLinks.ts';
 
 const checkActionEligibility = async (discordId: string, guildId: string, targetMember: GroupMember, rankingTo: number): Promise<boolean>  => {
     let robloxUser: User;

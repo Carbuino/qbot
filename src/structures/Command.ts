@@ -1,13 +1,20 @@
 import {
-    ApplicationCommandOptionData, ApplicationCommandOptionType, ApplicationCommandType,
+    ApplicationCommandOptionType,
+    ApplicationCommandType,
 } from 'discord.js';
-import {
+
+import type {
+    ApplicationCommandOptionData,
+} from 'discord.js';
+
+import type {
     CommandConfig,
     CommandPermission,
     CommandArgument,
     CommandType,
-} from './types';
-import { CommandContext } from './addons/CommandAddons';
+} from './types.d.ts';
+
+import type { CommandContext } from './addons/CommandAddons.ts';
 
 const commandTypeMappings = {
     ChatInput: ApplicationCommandType.ChatInput,

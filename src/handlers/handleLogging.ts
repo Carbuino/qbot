@@ -1,9 +1,12 @@
-import { TextChannel, User as DiscordUser } from 'discord.js';
-import { GroupMember, PartialUser, User as RobloxUser } from 'bloxy/dist/structures';
-import { discordClient } from '../main';
-import { getLogEmbed } from './locale';
-import { config } from '../config';
-import { recordAction } from './abuseDetection';
+import {
+    TextChannel,
+    User as DiscordUser,
+} from 'discord.js';
+import type { GroupMember, PartialUser, User as RobloxUser } from '../structures/types.d.ts';
+import { discordClient } from '../main.ts';
+import { getLogEmbed } from './locale.ts';
+import { config } from '../config.ts';
+import { recordAction } from './abuseDetection.ts';
 
 let actionLogChannel: TextChannel;
 const getLogChannels = async () => {

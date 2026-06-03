@@ -1,7 +1,6 @@
-import { robloxClient, robloxGroup } from '../main';
-import { config } from '../config';
-import { GroupMember } from 'bloxy/dist/structures';
-import { provider } from '../database';
+import { robloxGroup } from '../main.ts';
+import { config } from '../config.ts';
+import { provider } from '../database/index.ts';
 
 const checkBans = async () => {
     try {
@@ -11,7 +10,7 @@ const checkBans = async () => {
                 const member = await robloxGroup.getMember(Number(user.robloxId)); 
                 if(!member) throw new Error();
                 if(member) {
-                    await member.kickFromGroup(config.groupId);
+                    await robloxGroup.kickMember(member.id);
                 }
             } catch (err) {};
         });

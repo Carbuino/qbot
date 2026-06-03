@@ -1,17 +1,18 @@
-import { QbotClient } from './structures/QbotClient';
-import { Client as RobloxClient } from 'bloxy';
-import { handleInteraction } from './handlers/handleInteraction';
-import { handleLegacyCommand } from './handlers/handleLegacyCommand';
-import { config } from './config'; 
-import { Group } from 'bloxy/dist/structures';
-import { recordShout } from './events/shout';
-import { checkSuspensions } from './events/suspensions';
-import { recordAuditLogs } from './events/audit';
-import { recordMemberCount } from './events/member';
-import { clearActions } from './handlers/abuseDetection';
-import { checkBans } from './events/bans';
-import { checkWallForAds } from './events/wall';
-require('dotenv').config();
+import { QbotClient } from './structures/QbotClient.ts';
+import noblox from 'noblox.js';
+import { handleInteraction } from './handlers/handleInteraction.ts';
+import { handleLegacyCommand } from './handlers/handleLegacyCommand.ts';
+import { config } from './config.ts'; 
+import { recordShout } from './events/shout.ts';
+import { checkSuspensions } from './events/suspensions.ts';
+import { recordAuditLogs } from './events/audit.ts';
+import { recordMemberCount } from './events/member.ts';
+import { clearActions } from './handlers/abuseDetection.ts';
+import { checkBans } from './events/bans.ts';
+import { checkWallForAds } from './events/wall.ts';
+import { robloxClient, robloxGroup } from './structures/RobloxClient.ts';
+import 'dotenv/config';
+import './api.ts'; // starts the Express API server
 
 // [Ensure Setup]
 if(!process.env.ROBLOX_COOKIE) {
@@ -19,18 +20,16 @@ if(!process.env.ROBLOX_COOKIE) {
     process.exit(1);
 }
 
-require('./database');
-require('./api');
-
 // [Clients]
 const discordClient = new QbotClient();
 discordClient.login(process.env.DISCORD_TOKEN);
-const robloxClient = new RobloxClient({ credentials: { cookie: process.env.ROBLOX_COOKIE } });
-let robloxGroup: Group = null;
+
 (async () => {
-    await robloxClient.login().catch(console.error);
-    robloxGroup = await robloxClient.getGroup(config.groupId);
-    
+    const currentUser = await noblox.setCookie(process.env.ROBLOX_COOKIE).catch(console.error);
+    if(currentUser) {
+        robloxClient.user.id = currentUser.id;
+    }
+
     // [Events]
     checkSuspensions();
     checkBans();

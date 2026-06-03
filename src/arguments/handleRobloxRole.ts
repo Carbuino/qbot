@@ -1,5 +1,11 @@
-import { AutocompleteInteraction, APIApplicationCommandOptionChoice } from 'discord.js';
-import { robloxGroup } from '../main';
+import {
+    AutocompleteInteraction,
+} from 'discord.js';
+
+import type {
+    APIApplicationCommandOptionChoice,
+} from 'discord.js';
+import { robloxGroup } from '../main.ts';
 
 const handleRobloxRole = async (interaction: AutocompleteInteraction, option: APIApplicationCommandOptionChoice) => {
     try {

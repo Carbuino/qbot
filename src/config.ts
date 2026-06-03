@@ -1,5 +1,5 @@
 import { ActivityType } from 'discord.js';
-import { BotConfig } from './structures/types'; 
+import type { BotConfig } from './structures/types';
 
 export const config: BotConfig = {
     groupId: 0,

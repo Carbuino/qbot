@@ -1,6 +1,6 @@
-import { discordClient, robloxClient, robloxGroup } from '../../main';
-import { CommandContext } from '../../structures/addons/CommandAddons';
-import { Command } from '../../structures/Command';
+import { discordClient, robloxClient, robloxGroup } from '../../main.ts';
+import { CommandContext } from '../../structures/addons/CommandAddons.ts';
+import { Command } from '../../structures/Command.ts';
 import {
     getInvalidRobloxUserEmbed,
     getRobloxUserIsNotMemberEmbed,
@@ -10,13 +10,13 @@ import {
     getVerificationChecksFailedEmbed,
     getSuccessfulXPChangeEmbed,
     getInvalidXPEmbed,
-} from '../../handlers/locale';
-import { checkActionEligibility } from '../../handlers/verificationChecks';
-import { config } from '../../config';
-import { User, PartialUser, GroupMember } from 'bloxy/dist/structures';
-import { logAction } from '../../handlers/handleLogging';
-import { getLinkedRobloxUser } from '../../handlers/accountLinks';
-import { provider } from '../../database';
+} from '../../handlers/locale.ts';
+import { checkActionEligibility } from '../../handlers/verificationChecks.ts';
+import { config } from '../../config.ts';
+import type { User, PartialUser, GroupMember } from '../../structures/types.d.ts';
+import { logAction } from '../../handlers/handleLogging.ts';
+import { getLinkedRobloxUser } from '../../handlers/accountLinks.ts';
+import { provider } from '../../database/index.ts';
 
 class RemoveXPCommand extends Command {
     constructor() {
@@ -98,7 +98,7 @@ class RemoveXPCommand extends Command {
 
         try {
             ctx.reply({ embeds: [ await getSuccessfulXPChangeEmbed(robloxUser, xp) ]});
-            logAction('Remove XP', ctx.user, ctx.args['reason'], robloxUser, null, null, null, `${userData.xp} → ${xp} (-${Number(ctx.args['decrement'])})`);
+            logAction('Remove XP', ctx.user, ctx.args['reason'], robloxUser, null, null, null, `${userData.xp} ? ${xp} (-${Number(ctx.args['decrement'])})`);
         } catch (err) {
             console.log(err);
             return ctx.reply({ embeds: [ getUnexpectedErrorEmbed() ]});

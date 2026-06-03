@@ -1,8 +1,8 @@
-import { CommandContext } from '../../structures/addons/CommandAddons';
-import { Command } from '../../structures/Command';
-import { getSuccessfulSignalEmbed } from '../../handlers/locale';
-import { addSignal } from '../../api';
-import { config } from '../../config';
+import { CommandContext } from '../../structures/addons/CommandAddons.ts';
+import { Command } from '../../structures/Command.ts';
+import { getSuccessfulSignalEmbed } from '../../handlers/locale.ts';
+import { addSignal } from '../../api.ts';
+import { config } from '../../config.ts';
 
 class SignalCommand extends Command {
     constructor() {

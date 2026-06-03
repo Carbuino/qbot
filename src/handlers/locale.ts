@@ -1,11 +1,20 @@
-import { EmbedBuilder } from 'discord.js';
-import { CommandArgument, DatabaseUser } from '../structures/types';
-import { config } from '../config';
-import { User, PartialUser, GroupMember, GroupJoinRequest, GroupRole } from 'bloxy/dist/structures';
-import { User as DiscordUser } from 'discord.js';
-import { Command } from '../structures/Command';
-import { robloxClient } from '../main';
-import { textSync } from 'figlet';
+import {
+    EmbedBuilder,
+    User as DiscordUser,
+} from 'discord.js';
+import type {
+    CommandArgument,
+    DatabaseUser,
+    User,
+    PartialUser,
+    GroupMember,
+    GroupJoinRequest,
+    GroupRole
+} from '../structures/types.d.ts';
+import { config } from '../config.ts';
+import { Command } from '../structures/Command.ts';
+import noblox from 'noblox.js';
+import figlet from 'figlet';
 
 export const checkIconUrl = 'https://cdn.lengolabs.com/qbot-icons/check.png';
 export const xmarkIconUrl = 'https://cdn.lengolabs.com/qbot-icons/xmark.png';
@@ -22,17 +31,17 @@ export const consoleYellow = '\x1b[33m';
 export const consoleRed = '\x1b[31m';
 export const consoleClear = '\x1b[0m';
 
-export const qbotLaunchTextDisplay = `${consoleMagenta}${textSync('Qbot')}`;
+export const qbotLaunchTextDisplay = `${consoleMagenta}${figlet.textSync('Qbot')}`;
 export const welcomeText = `${consoleYellow}Hey, thanks for using Qbot! If you run into any issues, please do not hesitate to join our support server: https://lengolabs.com/discord`;
-export const startedText = `\n${consoleGreen}✓  ${consoleClear}Your bot has been started.`;
-export const securityText = `\n${consoleRed}⚠  ${consoleClear}URGENT: For security reasons, public bot must be DISABLED for the bot to start. For more information, please refer to this section of our documentation: https://docs.lengolabs.com/qbot/setup/replit-guide#discord`;
+export const startedText = `\n${consoleGreen}?  ${consoleClear}Your bot has been started.`;
+export const securityText = `\n${consoleRed}?  ${consoleClear}URGENT: For security reasons, public bot must be DISABLED for the bot to start. For more information, please refer to this section of our documentation: https://docs.lengolabs.com/qbot/setup/replit-guide#discord`;
 
 export const noFiredRankLog = `Uh oh, you do not have a fired rank with the rank specified in your configuration file.`;
 export const noSuspendedRankLog = `Uh oh, you do not have a suspended rank with the rank specified in your configuration file.`;
-export const getListeningText = (port) => `${consoleGreen}✓  ${consoleClear}Listening on port ${port}.`;
+export const getListeningText = (port) => `${consoleGreen}?  ${consoleClear}Listening on port ${port}.`;
 
 const getHeadshotImage = async (userId: number) => {
-    return (await robloxClient.apis.thumbnailsAPI.getUsersAvatarHeadShotImages({ userIds: [ userId ], size: '48x48', format: 'png' })).data[0];
+    return (await noblox.getPlayerThumbnail([userId], '48x48', 'png', false, 'headshot'))[0];
 }
 
 export const getUnknownCommandMessage = (): EmbedBuilder => {
@@ -353,9 +362,9 @@ export const getVerificationChecksFailedEmbed = (): EmbedBuilder => {
         .setDescription(`
         To prevent you from ranking someone that you would not manually be able to rank, the bot checks the following things before allowing you to rank a user. In this case, you have failed one or more, and therefore you are unable to rank this user.
 
-        • You are verified on this server.
-        • The user you are performing this action on is not you.
-        • Your rank is above the rank of the user you are trying to perform this action on.
+        . You are verified on this server.
+        . The user you are performing this action on is not you.
+        . Your rank is above the rank of the user you are trying to perform this action on.
         `);
 
     return embed;
@@ -389,22 +398,22 @@ export const getInvalidDurationEmbed = (): EmbedBuilder => {
 }
 
 export const getShoutLogEmbed = async (shout: any): Promise<EmbedBuilder> => {
-    const shoutCreator = await robloxClient.apis.usersAPI.getUserById(shout.creator.id);
+    const shoutCreator = await noblox.getPlayerInfo(shout.poster.userId);
     const embed = new EmbedBuilder()
-        .setAuthor({ name: `Shout from ${shoutCreator.name}`, iconURL: quoteIconUrl })
-        .setThumbnail((await getHeadshotImage(shout.creator.id)).imageUrl)
+        .setAuthor({ name: `Shout from ${shoutCreator.username}`, iconURL: quoteIconUrl })
+        .setThumbnail((await getHeadshotImage(shout.poster.userId)).imageUrl)
         .setColor(mainColor)
         .setTimestamp()
-        .setDescription(shout.content);
+        .setDescription(shout.body);
 
     return embed;
 }
 
 export const getWallPostEmbed = async (post): Promise<EmbedBuilder> => {
-    const postCreator = await robloxClient.apis.usersAPI.getUserById(post.poster);
+    const postCreator = await noblox.getPlayerInfo(post.poster.user.userId);
     const embed = new EmbedBuilder()
-        .setAuthor({ name: `Posted by ${postCreator.name}`, iconURL: quoteIconUrl })
-        .setThumbnail((await getHeadshotImage(post.poster)).imageUrl)
+        .setAuthor({ name: `Posted by ${postCreator.username}`, iconURL: quoteIconUrl })
+        .setThumbnail((await getHeadshotImage(post.poster.user.userId)).imageUrl)
         .setColor(mainColor)
         .setTimestamp()
         .setDescription(post['body']);
@@ -445,11 +454,12 @@ export const getAlreadyRankedEmbed = (): EmbedBuilder => {
 }
 
 export const getPartialUserInfoEmbed = async (user: User | PartialUser, data: DatabaseUser): Promise<EmbedBuilder> => {
-    const primaryGroup = await user.getPrimaryGroup();
+    const groups = await noblox.getGroups(user.id).catch(() => []);
+    const primaryGroup = groups.find((g) => g.IsPrimary);
     const embed = new EmbedBuilder()
         .setAuthor({ name: `Information: ${user.name}`, iconURL: infoIconUrl })
         .setColor(mainColor)
-        .setDescription(primaryGroup ? `Primary Group: [${primaryGroup.group.name}](https://roblox.com/groups/${primaryGroup.group.id})` : null)
+        .setDescription(primaryGroup ? `Primary Group: [${primaryGroup.Name}](https://roblox.com/groups/${primaryGroup.Id})` : null)
         .setThumbnail((await getHeadshotImage(user.id)).imageUrl)
         .setFooter({ text: `User ID: ${user.id}` })
         .setTimestamp()
@@ -461,7 +471,7 @@ export const getPartialUserInfoEmbed = async (user: User | PartialUser, data: Da
             },
             {
                 name: 'Banned',
-                value: data.isBanned ? `✅` : '❌',
+                value: data.isBanned ? `?` : '?',
                 inline: true
             }
         ]);
@@ -470,12 +480,13 @@ export const getPartialUserInfoEmbed = async (user: User | PartialUser, data: Da
 }
 
 export const getUserInfoEmbed = async (user: User | PartialUser, member: GroupMember, data: DatabaseUser): Promise<EmbedBuilder> => {
-    const primaryGroup = await user.getPrimaryGroup();
+    const groups = await noblox.getGroups(user.id).catch(() => []);
+    const primaryGroup = groups.find((g) => g.IsPrimary);
     const embed = new EmbedBuilder()
         .setAuthor({ name: `Information: ${user.name}`, iconURL: infoIconUrl })
         .setColor(mainColor)
-        .setDescription(primaryGroup ? `Primary Group: [${primaryGroup.group.name}](https://roblox.com/groups/${primaryGroup.group.id})` : null)
-        .setThumbnail((await robloxClient.apis.thumbnailsAPI.getUsersAvatarHeadShotImages({ userIds: [ user.id ], size: '150x150', format: 'png', isCircular: false })).data[0].imageUrl)
+        .setDescription(primaryGroup ? `Primary Group: [${primaryGroup.Name}](https://roblox.com/groups/${primaryGroup.Id})` : null)
+        .setThumbnail((await noblox.getPlayerThumbnail([user.id], '150x150', 'png', false, 'headshot'))[0].imageUrl)
         .setFooter({ text: `User ID: ${user.id}` })
         .setTimestamp()
         .addFields([
@@ -491,12 +502,12 @@ export const getUserInfoEmbed = async (user: User | PartialUser, member: GroupMe
             },
             {
                 name: 'Suspended',
-                value: data.suspendedUntil ? `✅ (<t:${Math.round(data.suspendedUntil.getTime() / 1000)}:R>)` : '❌',
+                value: data.suspendedUntil ? `? (<t:${Math.round(data.suspendedUntil.getTime() / 1000)}:R>)` : '?',
                 inline: true
             },
             {
                 name: 'Banned',
-                value: data.isBanned ? `✅` : '❌',
+                value: data.isBanned ? `?` : '?',
                 inline: true
             }
         ]);
@@ -532,9 +543,9 @@ export const getNotSuspendedEmbed = (): EmbedBuilder => {
 
 export const getMemberCountMessage = (oldCount: number, newCount: number): string => {
     if(newCount > oldCount) {
-        return `⬆️ The member count is now **${newCount}** (+${newCount - oldCount})`;
+        return `?? The member count is now **${newCount}** (+${newCount - oldCount})`;
     } else {
-        return `⬇️ The member count is now **${newCount}** (-${oldCount - newCount})`;
+        return `?? The member count is now **${newCount}** (-${oldCount - newCount})`;
     }
 }
 
@@ -542,7 +553,7 @@ export const getMemberCountMilestoneEmbed = (count: number): EmbedBuilder => {
     const embed = new EmbedBuilder()
     .setAuthor({ name: 'Member Milestone Reached!', iconURL: checkIconUrl })
         .setColor(greenColor)
-        .setDescription(`🎉 The member count is now **${count}**!`);
+        .setDescription(`?? The member count is now **${count}**!`);
 
     return embed;
 }

@@ -1,7 +1,7 @@
-import { DatabaseUser } from '../structures/types';
-import { provider } from '../database';
-import { robloxGroup } from '../main';
-import { config } from '../config';
+import type { DatabaseUser } from '../structures/types.d.ts';
+import { provider } from '../database/index.ts';
+import { robloxGroup } from '../main.ts';
+import { config } from '../config.ts';
 
 const checkSuspensions = async () => {
     const suspensions = await provider.findSuspendedUsers();

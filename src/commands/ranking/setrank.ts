@@ -1,6 +1,6 @@
-import { discordClient, robloxClient, robloxGroup } from '../../main';
-import { CommandContext } from '../../structures/addons/CommandAddons';
-import { Command } from '../../structures/Command';
+import { discordClient, robloxClient, robloxGroup } from '../../main.ts';
+import { CommandContext } from '../../structures/addons/CommandAddons.ts';
+import { Command } from '../../structures/Command.ts';
 import {
     getInvalidRobloxUserEmbed,
     getRobloxUserIsNotMemberEmbed,
@@ -10,13 +10,13 @@ import {
     getVerificationChecksFailedEmbed,
     getAlreadyRankedEmbed,
     getUserSuspendedEmbed,
-} from '../../handlers/locale';
-import { config } from '../../config';
-import { User, PartialUser, GroupMember } from 'bloxy/dist/structures';
-import { checkActionEligibility } from '../../handlers/verificationChecks';
-import { logAction } from '../../handlers/handleLogging';
-import { getLinkedRobloxUser } from '../../handlers/accountLinks';
-import { provider } from '../../database';
+} from '../../handlers/locale.ts';
+import { config } from '../../config.ts';
+import type { User, PartialUser, GroupMember } from '../../structures/types.d.ts';
+import { checkActionEligibility } from '../../handlers/verificationChecks.ts';
+import { logAction } from '../../handlers/handleLogging.ts';
+import { getLinkedRobloxUser } from '../../handlers/accountLinks.ts';
+import { provider } from '../../database/index.ts';
 
 class SetRankCommand extends Command {
     constructor() {
@@ -102,7 +102,7 @@ class SetRankCommand extends Command {
         try {
             await robloxGroup.updateMember(robloxUser.id, role.id);
             ctx.reply({ embeds: [ await getSuccessfulSetRankEmbed(robloxUser, role.name) ]})
-            logAction('Update Rank', ctx.user, ctx.args['reason'], robloxUser, `${robloxMember.role.name} (${robloxMember.role.rank}) → ${role.name} (${role.rank})`);
+            logAction('Update Rank', ctx.user, ctx.args['reason'], robloxUser, `${robloxMember.role.name} (${robloxMember.role.rank}) ? ${role.name} (${role.rank})`);
         } catch (err) {
             console.log(err);
             return ctx.reply({ embeds: [ getUnexpectedErrorEmbed() ]});

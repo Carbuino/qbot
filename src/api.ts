@@ -1,12 +1,12 @@
 import express from 'express';
-import { config } from './config';
-import { provider } from './database';
-import { logAction } from './handlers/handleLogging';
-import { robloxClient, robloxGroup } from './main';
+import { config } from './config.ts';
+import { provider } from './database/index.ts';
+import { logAction } from './handlers/handleLogging.ts';
+import { robloxClient, robloxGroup } from './main.ts';
 import ms from 'ms';
-import { findEligibleRole } from './handlers/handleXpRankup';
+import { findEligibleRole } from './handlers/handleXpRankup.ts';
+import 'dotenv/config';
 const app = express();
-require('dotenv').config();
 
 let signals = [];
 app.use(express.json());

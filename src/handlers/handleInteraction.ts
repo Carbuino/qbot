@@ -1,15 +1,21 @@
-import { discordClient } from '../main';
-import { CommandContext } from '../structures/addons/CommandAddons';
+import { discordClient } from '../main.ts';
+import { CommandContext } from '../structures/addons/CommandAddons.ts';
 import {
-    Interaction,
     CommandInteraction,
     AutocompleteInteraction,
     ChannelType,
+} from 'discord.js';
+
+import type {
+    Interaction,
+} from 'discord.js';
+
+import type {
     CacheType,
 } from 'discord.js';
-import { handleRobloxUser } from '../arguments/handleRobloxUser';
-import { handleRobloxRole } from '../arguments/handleRobloxRole';
-import { getUnknownCommandMessage, getNoPermissionEmbed } from '../handlers/locale';
+import { handleRobloxUser } from '../arguments/handleRobloxUser.ts';
+import { handleRobloxRole } from '../arguments/handleRobloxRole.ts';
+import { getUnknownCommandMessage, getNoPermissionEmbed } from '../handlers/locale.ts';
 
 const handleInteraction = async (payload: Interaction<CacheType>) => {
     if(payload instanceof CommandInteraction) {

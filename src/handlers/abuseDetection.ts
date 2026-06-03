@@ -1,8 +1,10 @@
-import { User } from 'discord.js';
-import { config } from '../config';
-import { discordClient, robloxGroup } from '../main';
-import { getLinkedRobloxUser } from './accountLinks';
-import { logAction } from './handleLogging';
+import {
+    User,
+} from 'discord.js';
+import { config } from '../config.ts';
+import { discordClient, robloxGroup } from '../main.ts';
+import { getLinkedRobloxUser } from './accountLinks.ts';
+import { logAction } from './handleLogging.ts';
 
 let actionCounts = [];
 

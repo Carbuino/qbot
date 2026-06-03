@@ -1,12 +1,12 @@
-import { robloxGroup } from '../../main';
-import { CommandContext } from '../../structures/addons/CommandAddons';
-import { Command } from '../../structures/Command';
+import { robloxGroup } from '../../main.ts';
+import { CommandContext } from '../../structures/addons/CommandAddons.ts';
+import { Command } from '../../structures/Command.ts';
 import {
     getUnexpectedErrorEmbed,
     getSuccessfulShoutEmbed,
-} from '../../handlers/locale';
-import { config } from '../../config';
-import { logAction } from '../../handlers/handleLogging';
+} from '../../handlers/locale.ts';
+import { config } from '../../config.ts';
+import { logAction } from '../../handlers/handleLogging.ts';
 
 class ShoutCommand extends Command {
     constructor() {

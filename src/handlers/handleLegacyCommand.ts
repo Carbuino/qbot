@@ -1,19 +1,21 @@
-import { Message } from 'discord.js';
-import { discordClient } from '../main';
-import { config } from '../config';
-import { CommandContext } from '../structures/addons/CommandAddons';
+import {
+    Message,
+} from 'discord.js';
+import { discordClient } from '../main.ts';
+import { config } from '../config.ts';
+import { CommandContext } from '../structures/addons/CommandAddons.ts';
 import { Lexer, Parser, Args, prefixedStrategy } from 'lexure';
-import { getNoPermissionEmbed } from '../handlers/locale';
+import { getNoPermissionEmbed } from '../handlers/locale.ts';
 
 const parseCommand = (s: string): [string, Args] | null => {
-    const lexer = new Lexer(s).setQuotes([ ['"', '"'], ['“', '”'] ]);
+    const lexer = new Lexer(s).setQuotes([ ['"', '"'], ['"', '"'] ]);
     const lout = lexer.lexCommand(s => config.legacyCommands.prefixes.some((prefix) => s.startsWith(prefix)) ? 1 : null);
     if(!lout) return null;
 
     const [command, getTokens] = lout;
     const tokens = getTokens();
     const parser = new Parser(tokens).setUnorderedStrategy(prefixedStrategy(
-        ['--', '-', '—'],
+        ['--', '-', '-'],
         ['=', ':'],
     ));
 

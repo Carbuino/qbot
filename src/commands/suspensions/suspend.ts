@@ -1,6 +1,6 @@
-import { discordClient, robloxClient, robloxGroup } from '../../main';
-import { CommandContext } from '../../structures/addons/CommandAddons';
-import { Command } from '../../structures/Command';
+import { discordClient, robloxClient, robloxGroup } from '../../main.ts';
+import { CommandContext } from '../../structures/addons/CommandAddons.ts';
+import { Command } from '../../structures/Command.ts';
 import {
     getInvalidRobloxUserEmbed,
     getRobloxUserIsNotMemberEmbed,
@@ -12,14 +12,14 @@ import {
     getAlreadySuspendedEmbed,
     noSuspendedRankLog,
     getNoDatabaseEmbed,
-} from '../../handlers/locale';
-import { checkActionEligibility } from '../../handlers/verificationChecks';
-import { config } from '../../config';
-import { User, PartialUser, GroupMember } from 'bloxy/dist/structures';
-import { logAction } from '../../handlers/handleLogging';
-import { getLinkedRobloxUser } from '../../handlers/accountLinks';
+} from '../../handlers/locale.ts';
+import { checkActionEligibility } from '../../handlers/verificationChecks.ts';
+import { config } from '../../config.ts';
+import type { User, PartialUser, GroupMember } from '../../structures/types.d.ts';
+import { logAction } from '../../handlers/handleLogging.ts';
+import { getLinkedRobloxUser } from '../../handlers/accountLinks.ts';
 import ms from 'ms';
-import { provider } from '../../database';
+import { provider } from '../../database/index.ts';
 
 class SuspendCommand extends Command {
     constructor() {
@@ -120,7 +120,7 @@ class SuspendCommand extends Command {
         try {
             if(robloxMember.role.id !== role.id) await robloxGroup.updateMember(robloxUser.id, role.id);
             ctx.reply({ embeds: [ await getSuccessfulSuspendEmbed(robloxUser, role.name, endDate) ]});
-            logAction('Suspend', ctx.user, ctx.args['reason'], robloxUser, `${robloxMember.role.name} (${robloxMember.role.rank}) → ${role.name} (${role.rank})`, endDate);
+            logAction('Suspend', ctx.user, ctx.args['reason'], robloxUser, `${robloxMember.role.name} (${robloxMember.role.rank}) ? ${role.name} (${role.rank})`, endDate);
         } catch (err) {
             console.error(err);
             return ctx.reply({ embeds: [ getUnexpectedErrorEmbed() ]});

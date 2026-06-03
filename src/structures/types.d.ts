@@ -1,7 +1,10 @@
 import {
     ActivityType,
+} from 'discord.js';
+
+import type {
     ApplicationCommandOptionChoiceData,
-    ApplicationCommandOptionAllowedChannelTypes
+    ApplicationCommandOptionAllowedChannelTypes,
 } from 'discord.js';
 
 export interface BotConfig {
@@ -317,6 +320,40 @@ export interface CommandConfig {
 
 export declare type CommandExport = {
     default: any;
+}
+
+export interface RobloxUser {
+    id: number;
+    name: string;
+}
+
+export type User = RobloxUser;
+export type PartialUser = RobloxUser;
+
+export interface GroupMember {
+    id: number;
+    name: string;
+    role: {
+        id: number;
+        name: string;
+        rank: number;
+    };
+}
+
+export interface GroupRole {
+    id: number;
+    name: string;
+    rank: number;
+    memberCount?: number;
+}
+
+export interface GroupJoinRequest {
+    requester: {
+        userId: number;
+        username: string;
+        displayName: string;
+    };
+    created: Date;
 }
 
 export declare type BloxlinkResponse = {

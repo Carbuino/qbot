@@ -1,12 +1,13 @@
-import { discordClient } from '../../main';
-import { CommandContext } from '../../structures/addons/CommandAddons';
-import { Command } from '../../structures/Command';
-import { groupBy } from 'lodash';
+import { discordClient } from '../../main.ts';
+import { CommandContext } from '../../structures/addons/CommandAddons.ts';
+import { Command } from '../../structures/Command.ts';
+import lodash from 'lodash';
+const { groupBy } = lodash;
 import {
     getCommandInfoEmbed,
     getCommandListEmbed,
     getCommandNotFoundEmbed,
-} from '../../handlers/locale';
+} from '../../handlers/locale.ts';
 
 class HelpCommand extends Command {
     constructor() {

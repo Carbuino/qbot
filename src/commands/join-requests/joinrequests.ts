@@ -1,8 +1,8 @@
-import { robloxGroup } from '../../main';
-import { CommandContext } from '../../structures/addons/CommandAddons';
-import { Command } from '../../structures/Command';
-import { getJoinRequestsEmbed } from '../../handlers/locale';
-import { config } from '../../config';
+import { robloxGroup } from '../../main.ts';
+import { CommandContext } from '../../structures/addons/CommandAddons.ts';
+import { Command } from '../../structures/Command.ts';
+import { getJoinRequestsEmbed } from '../../handlers/locale.ts';
+import { config } from '../../config.ts';
 
 class JoinRequestsCommand extends Command {
     constructor() {

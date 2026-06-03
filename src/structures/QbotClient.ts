@@ -1,12 +1,16 @@
-import { Client, GatewayIntentBits } from 'discord.js';
-import { BotConfig, CommandExport } from './types';
-import { Command } from './Command';
-import { config } from '../config';
-import { readdirSync, writeFileSync } from 'fs';
-import { discordClient } from '../main';
-import { qbotLaunchTextDisplay, welcomeText, startedText, securityText, getListeningText } from '../handlers/locale';
-import { getLogChannels } from '../handlers/handleLogging';
-require('dotenv').config();
+import {
+    Client,
+    GatewayIntentBits,
+} from 'discord.js';
+import type { BotConfig, CommandExport } from './types.d.ts';
+import { Command } from './Command.ts';
+import { config } from '../config.ts';
+import { readFileSync, readdirSync, writeFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { discordClient } from '../main.ts';
+import { qbotLaunchTextDisplay, welcomeText, startedText, securityText, getListeningText } from '../handlers/locale.ts';
+import { getLogChannels } from '../handlers/handleLogging.ts';
+import 'dotenv/config';
 
 class QbotClient extends Client {
     config: BotConfig;
@@ -53,7 +57,7 @@ class QbotClient extends Client {
             rawModules.forEach(async (module, moduleIndex) => {
                 const rawCommands = readdirSync(`./src/commands/${module}`);
                 rawCommands.forEach(async (cmdName, cmdIndex) => {
-                    const { default: command }: CommandExport = await import(`../commands/${module}/${cmdName.replace('.ts', '')}`);
+                    const { default: command }: CommandExport = await import(`../commands/${module}/${cmdName}`);
                     commands.push(command);
                     if(moduleIndex === rawModules.length - 1 && cmdIndex === rawCommands.length - 1) resolve(commands);
                 });
@@ -61,7 +65,7 @@ class QbotClient extends Client {
         });
         loadPromise.then(async (commands: Command[]) => {
             const slashCommands = commands.map((cmd: any) => new cmd().generateAPICommand());
-            const currentCommands = require('../resources/commands.json');
+            const currentCommands = JSON.parse(readFileSync(fileURLToPath(new URL('../resources/commands.json', import.meta.url)), 'utf-8'));
             if(JSON.stringify(currentCommands) !== JSON.stringify(slashCommands)) {
                 writeFileSync('./src/resources/commands.json', JSON.stringify(slashCommands), 'utf-8');
                 discordClient.application.commands.set(slashCommands);

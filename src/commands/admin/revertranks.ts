@@ -1,16 +1,17 @@
-import { CommandContext } from '../../structures/addons/CommandAddons';
-import { Command } from '../../structures/Command';
+import { CommandContext } from '../../structures/addons/CommandAddons.ts';
+import { Command } from '../../structures/Command.ts';
 import {
     getSuccessfulRevertRanksEmbed,
     getInvalidDurationEmbed,
     getInvalidRobloxUserEmbed,
-} from '../../handlers/locale';
-import { config } from '../../config';
-import { discordClient, robloxClient, robloxGroup } from '../../main';
+} from '../../handlers/locale.ts';
+import { config } from '../../config.ts';
+import { discordClient, robloxClient, robloxGroup } from '../../main.ts';
 import ms from 'ms';
-import { logAction } from '../../handlers/handleLogging';
-import { PartialUser, User } from 'bloxy/dist/structures';
-import { getLinkedRobloxUser } from '../../handlers/accountLinks';
+import { logAction } from '../../handlers/handleLogging.ts';
+import type { PartialUser, User } from '../../structures/types.d.ts';
+import { getLinkedRobloxUser } from '../../handlers/accountLinks.ts';
+import noblox from 'noblox.js';
 
 class RevertRanksCommand extends Command {
     constructor() {
@@ -74,11 +75,7 @@ class RevertRanksCommand extends Command {
             }
         }
         
-        const auditLog = await robloxClient.apis.groupsAPI.getAuditLogs({
-            groupId: robloxGroup.id,
-            actionType: 'ChangeRank',
-            limit: 100,
-        });
+        const auditLog = await noblox.getAuditLog(robloxGroup.id, 'ChangeRank', undefined, 'Desc', 100);
 
         let duration: number;
         try {

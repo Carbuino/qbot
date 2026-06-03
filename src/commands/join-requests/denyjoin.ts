@@ -1,16 +1,16 @@
-import { discordClient, robloxClient, robloxGroup } from '../../main';
-import { CommandContext } from '../../structures/addons/CommandAddons';
-import { Command } from '../../structures/Command';
+import { discordClient, robloxClient, robloxGroup } from '../../main.ts';
+import { CommandContext } from '../../structures/addons/CommandAddons.ts';
+import { Command } from '../../structures/Command.ts';
 import {
     getInvalidRobloxUserEmbed,
     getUnexpectedErrorEmbed,
     getSuccessfulDenyJoinRequestEmbed,
     getNoJoinRequestEmbed,
-} from '../../handlers/locale';
-import { config } from '../../config';
-import { User, PartialUser } from 'bloxy/dist/structures';
-import { logAction } from '../../handlers/handleLogging';
-import { getLinkedRobloxUser } from '../../handlers/accountLinks';
+} from '../../handlers/locale.ts';
+import { config } from '../../config.ts';
+import type { User, PartialUser } from '../../structures/types.d.ts';
+import { logAction } from '../../handlers/handleLogging.ts';
+import { getLinkedRobloxUser } from '../../handlers/accountLinks.ts';
 
 class DenyJoinCommand extends Command {
     constructor() {
@@ -66,7 +66,7 @@ class DenyJoinCommand extends Command {
             }
         }
 
-        const joinRequest = await robloxUser.getJoinRequestInGroup(config.groupId);
+        const joinRequest = await robloxGroup.getJoinRequest(robloxUser.id);
         if(!joinRequest) return ctx.reply({ embeds: [ getNoJoinRequestEmbed() ] });
 
         try {

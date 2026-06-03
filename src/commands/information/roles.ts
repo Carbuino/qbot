@@ -1,7 +1,7 @@
-import { robloxGroup } from '../../main';
-import { CommandContext } from '../../structures/addons/CommandAddons';
-import { Command } from '../../structures/Command';
-import { getRoleListEmbed } from '../../handlers/locale';
+import { robloxGroup } from '../../main.ts';
+import { CommandContext } from '../../structures/addons/CommandAddons.ts';
+import { Command } from '../../structures/Command.ts';
+import { getRoleListEmbed } from '../../handlers/locale.ts';
 
 class RolesCommand extends Command {
     constructor() {

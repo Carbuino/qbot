@@ -1,6 +1,6 @@
-import { discordClient, robloxClient, robloxGroup } from '../../main';
-import { CommandContext } from '../../structures/addons/CommandAddons';
-import { Command } from '../../structures/Command';
+import { discordClient, robloxClient, robloxGroup } from '../../main.ts';
+import { CommandContext } from '../../structures/addons/CommandAddons.ts';
+import { Command } from '../../structures/Command.ts';
 import {
     getInvalidRobloxUserEmbed,
     getRobloxUserIsNotMemberEmbed,
@@ -10,13 +10,13 @@ import {
     getRoleNotFoundEmbed,
     getVerificationChecksFailedEmbed,
     getUserSuspendedEmbed,
-} from '../../handlers/locale';
-import { config } from '../../config';
-import { User, PartialUser, GroupMember } from 'bloxy/dist/structures';
-import { checkActionEligibility } from '../../handlers/verificationChecks';
-import { logAction } from '../../handlers/handleLogging';
-import { getLinkedRobloxUser } from '../../handlers/accountLinks';
-import { provider } from '../../database';
+} from '../../handlers/locale.ts';
+import { config } from '../../config.ts';
+import type { User, PartialUser, GroupMember } from '../../structures/types.d.ts';
+import { checkActionEligibility } from '../../handlers/verificationChecks.ts';
+import { logAction } from '../../handlers/handleLogging.ts';
+import { getLinkedRobloxUser } from '../../handlers/accountLinks.ts';
+import { provider } from '../../database/index.ts';
 
 class ExileCommand extends Command {
     constructor() {
@@ -90,7 +90,7 @@ class ExileCommand extends Command {
         if(userData.suspendedUntil) return ctx.reply({ embeds: [ getUserSuspendedEmbed() ] });
 
         try {
-            await robloxMember.kickFromGroup(config.groupId);
+            await robloxGroup.kickMember(robloxMember.id);
             ctx.reply({ embeds: [ await getSuccessfulExileEmbed(robloxUser) ]})
             logAction('Exile', ctx.user, ctx.args['reason'], robloxUser);
         } catch (err) {

@@ -1,5 +1,5 @@
-import { GroupMember, GroupRole } from 'bloxy/dist/structures';
-import { config } from '../config';
+import type { GroupMember, GroupRole } from '../structures/types.d.ts';
+import { config } from '../config.ts';
 
 const findEligibleRole = async (member: GroupMember, roles: GroupRole[], xp: number): Promise<GroupRole> => {
     const role = roles.find((role) => role.rank === config.xpSystem.roles.sort((a, b) => a.xp + b.xp).find((role) => xp >= role.xp)?.rank);

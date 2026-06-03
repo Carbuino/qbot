@@ -1,8 +1,8 @@
-import { config } from '../config';
-import { robloxClient } from '../main';
-import { BloxlinkResponse } from '../structures/types';
+import { config } from '../config.ts';
+import { robloxClient } from '../main.ts';
+import type { BloxlinkResponse } from '../structures/types.d.ts';
 import axios from 'axios';
-require('dotenv').config();
+import 'dotenv/config';
 let requestCount = 0;
 
 const getLinkedRobloxUser = async (discordId: string) => {

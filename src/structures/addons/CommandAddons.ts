@@ -1,17 +1,24 @@
 import {
     Message,
-    InteractionReplyOptions,
     CommandInteraction,
+    BaseInteraction,
+} from 'discord.js';
+
+import {
     User,
     Guild,
     GuildMember,
-    BaseInteraction,
+} from 'discord.js';
+
+import type {
+    InteractionReplyOptions,
     MessageCreateOptions,
 } from 'discord.js';
-import { Command } from '../Command';
+
+import { Command } from '../Command.ts';
 import { Args } from 'lexure';
-import { getMissingArgumentsEmbed } from '../../handlers/locale';
-import { config } from '../../config';
+import { getMissingArgumentsEmbed } from '../../handlers/locale.ts';
+import { config } from '../../config.ts';
 
 export class CommandContext  {
     type: 'interaction' | 'message';
