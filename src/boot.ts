@@ -1,7 +1,7 @@
 import { appendFileSync } from 'fs';
 import { inspect } from 'util';
 
-const logFile = '/home/container/qbot-startup-debug.log';
+const logFile = './qbot-startup-debug.log';
 const format = (value: unknown) => value instanceof Error ? (value.stack || value.message) : inspect(value, { depth: 6 });
 const log = (label: string, value?: unknown) => {
     const detail = value === undefined ? '' : `\n${format(value)}`;
