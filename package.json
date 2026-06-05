@@ -10,16 +10,17 @@
     "dev": "nodemon src/main.ts --ignore ./src/resources/commands.json",
     "test": "echo \"Error: no test specified\" && exit 1",
     "resetSlashCmds": "echo [] > src/resources/commands.json",
-    "update": "git fetch && git reset --hard origin/master && git pull"
+    "update": "git fetch && git reset --hard origin/master && git pull",
+    "postinstall": "prisma generate --schema=src/database/schema.prisma"
   },
   "author": "LengoLabs",
   "license": "MIT",
   "devDependencies": {
     "nodemon": "^3.1.14",
-    "prisma": "^6.19.2"
+    "prisma": "^6.19.3"
   },
   "dependencies": {
-    "@prisma/client": "^6.19.2",
+    "@prisma/client": "^6.19.3",
     "@types/express": "^5.0.6",
     "@types/lodash": "^4.17.24",
     "@types/node": "^25.9.1",
@@ -35,5 +36,12 @@
     "noblox.js": "^9.0.0",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"
+  },
+  "allowScripts": {
+    "@prisma/client@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "esbuild@0.28.0": true,
+    "noblox.js@9.0.0": true,
+    "prisma@6.19.3": true
   }
 }

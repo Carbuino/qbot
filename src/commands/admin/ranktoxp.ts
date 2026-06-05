@@ -1,12 +1,12 @@
-import { robloxClient, robloxGroup } from '../../main';
+import { robloxClient, robloxGroup } from '../../main.ts';
 import { EmbedBuilder } from 'discord.js';
-import { CommandContext } from '../../structures/addons/CommandAddons';
-import { Command } from '../../structures/Command';
-import { config } from '../../config';
+import { CommandContext } from '../../structures/addons/CommandAddons.ts';
+import { Command } from '../../structures/Command.ts';
+import { config } from '../../config.ts';
 import type { User, PartialUser, GroupMember, GroupRole } from '../../structures/types.d.ts';
-import { logAction } from '../../handlers/handleLogging';
-import { getUnexpectedErrorEmbed, checkIconUrl } from '../../handlers/locale';
-import { provider } from '../../database';
+import { logAction } from '../../handlers/handleLogging.ts';
+import { getUnexpectedErrorEmbed, checkIconUrl } from '../../handlers/locale.ts';
+import { provider } from '../../database/index.ts';
 import got from 'got';
 
 let changed = 0;

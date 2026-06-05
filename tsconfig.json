@@ -6,8 +6,5 @@
         "target": "es2021",
         "types": ["node"],
         "esModuleInterop": true
-    },
-    "ts-node": {
-        "esm": true
     }
 }
