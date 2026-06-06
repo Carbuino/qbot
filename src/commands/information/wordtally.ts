@@ -9,10 +9,20 @@ class WordTallyCommand extends Command {
     constructor() {
         super({
             trigger: 'wordtally',
-            description: 'Tally the most said words in a channel for the last month (case-insensitive).',
+            description: 'Tally the most said words in a channel for the given month.',
             type: 'ChatInput',
             module: 'information',
             args: [
+                {
+                    trigger: 'month',
+                    description: 'The month to scan (default: current month).',
+                    choices: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((m, i) => ({
+                        name: m,
+                        value: `${new Date().getFullYear()}-${(i + 1).toString().padStart(2, '0')}-01`
+                    })),
+                    required: false,
+                    type: 'String',
+                },
                 {
                     trigger: 'channel',
                     description: 'The channel to scan (defaults to the current channel).',
@@ -31,97 +41,103 @@ class WordTallyCommand extends Command {
 
     async run(ctx: CommandContext) {
         try {
-            const limitArg = ctx.args['limit'];
-            const limit = typeof limitArg === 'number' && limitArg > 0 ? Math.min(100, Math.floor(limitArg)) : 20;
+            const monthArg = ctx.args?.month ? new Date(ctx.args.month) : new Date();
+            const channel = ctx.args?.channel ? await discordClient.channels.fetch(ctx.args.channel) : ctx.subject?.channel;
+            const limit = parseInt(ctx.args?.limit as any, 10) || 20;
 
-            // Hardcoded blacklist (case-insensitive stopwords and common tokens)
-            const blacklistSet = new Set<string>([
-                "V0YD", "Expedition", "Report", "Host", "Co-Host", "Mountain", "Initial", "Final", "Members", "Notes", "Summit", "Picture"
+            const start = new Date(monthArg.getFullYear(), monthArg.getMonth(), 1, 0, 0, 0);
+            const end = new Date(monthArg.getFullYear(), monthArg.getMonth() + 1, 1, 0, 0, 0);
+
+            if(!channel || !(channel as any).messages || typeof (channel as any).messages.fetch !== 'function') {
+                const embed = new EmbedBuilder()
+                    .setAuthor({ name: 'Invalid Channel' })
+                    .setColor(mainColor)
+                    .setDescription('Please specify a valid text channel to scan.');
+                return ctx.reply({ embeds: [embed] });
+            }
+
+            const textChannel = channel as any;
+
+            // Fetch messages in batches until we reach the start of the month or a sane fetch limit
+            const collected = [] as Array<any>;
+            const limitPerFetch = 100;
+            const maxMessagesToFetch = 5000; // safety cap
+            let lastId: string = null;
+            let fetchedTotal = 0;
+
+            while (true) {
+                const options: any = { limit: limitPerFetch };
+                if (lastId) options.before = lastId;
+                const batch = await textChannel.messages.fetch(options);
+                if (!batch || batch.size === 0) break;
+
+                for (const msg of batch.values()) {
+                    const created = msg.createdAt;
+                    if (created >= start && created < end) collected.push(msg);
+                }
+
+                const last = batch.last();
+                if (!last) break;
+                // stop if we've gone past the month we're interested in
+                if (last.createdAt < start) break;
+
+                lastId = last.id;
+                fetchedTotal += batch.size;
+                if (fetchedTotal >= maxMessagesToFetch) break;
+            }
+
+            // Tally words
+            const stopwords = new Set([
+                'members', 'final', 'host', 'mountain', 'inital', 'notes', 'co-host', 'picture', 'expedition', 'summit', 'v0yd', 'report', 'expo', 'log', 'attendees'
             ]);
 
-            // Resolve channel
-            let channel: any = ctx.args['channel'];
-            if(!channel) {
-                // Try to use the subject channel (works for message or interaction)
-                // @ts-ignore
-                channel = ctx.subject && (ctx.subject as any).channel ? (ctx.subject as any).channel : null;
-                // If still not found, try channelId on interaction
-                // @ts-ignore
-                if(!channel && ctx.subject && (ctx.subject as any).channelId) {
-                    // @ts-ignore
-                    channel = await discordClient.channels.fetch((ctx.subject as any).channelId as string);
-                }
-            } else {
-                // If the provided arg is an ID string, fetch the channel to ensure messages are available
-                if(typeof channel === 'string') {
-                    channel = await discordClient.channels.fetch(channel as string);
-                } else if(channel && channel.id && !('messages' in channel)) {
-                    channel = await discordClient.channels.fetch(channel.id);
+            const counts: { [k: string]: number } = {};
+            for (const msg of collected) {
+                if (!msg.content) continue;
+                let content: string = msg.content;
+                // Remove URLs, mentions, channel/role mentions and custom emojis
+                content = content.replace(/https?:\/\/\S+/gi, ' ');
+                content = content.replace(/<a?:\w+:\d+>/g, ' ');
+                content = content.replace(/<@&?\d+>/g, ' ');
+                content = content.replace(/<#\d+>/g, ' ');
+                // Strip punctuation (keep apostrophes, hyphens and underscores inside words)
+                content = content.replace(/[^A-Za-z0-9_'\-\s]+/g, ' ');
+                const words = content.split(/\s+/).filter(Boolean);
+                for (let w of words) {
+                    w = (w || '').toLowerCase().trim();
+                    if (w.length <= 2) continue;
+                    if (stopwords.has(w)) continue;
+                    counts[w] = (counts[w] || 0) + 1;
                 }
             }
 
-            if(!channel || !('messages' in channel)) {
-                return ctx.reply('Please specify a text channel to scan, or run this command in a text channel.');
+            const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+            const top = entries.slice(0, limit);
+
+            const monthName = start.toLocaleString('en-US', { month: 'long' });
+            const title = `Word Tally — ${monthName} ${start.getFullYear()}`;
+
+            if (top.length === 0) {
+                const embed = new EmbedBuilder()
+                    .setAuthor({ name: title })
+                    .setColor(mainColor)
+                    .setDescription('No words found for that month.');
+                return ctx.reply({ embeds: [embed] });
             }
 
-            await ctx.defer();
+            let description = top.map((entry, i) => `**${i + 1}. ${entry[0]}** — ${entry[1]}`).join('\n');
+            if (description.length > 4096) description = description.substring(0, 4093) + '...';
 
-            const oneMonthAgo = new Date();
-            oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-
-            const counts = new Map<string, number>();
-
-            let lastId: string | undefined = undefined;
-            while(true) {
-                const fetchOptions: any = { limit: 100 };
-                if(lastId) fetchOptions.before = lastId;
-                const fetched = await channel.messages.fetch(fetchOptions);
-                if(!fetched || fetched.size === 0) break;
-
-                for(const message of fetched.values()) {
-                    if(!message || !message.createdAt) continue;
-                    if(message.createdAt < oneMonthAgo) continue;
-                    if(message.author && message.author.bot) continue;
-
-                    let text = message.content || '';
-                    if(!text) continue;
-
-                    // Remove code blocks and inline code, and URLs
-                    text = text.replace(/```[\s\S]*?```/g, ' ');
-                    text = text.replace(/`[^`]*`/g, ' ');
-                    text = text.replace(/https?:\/\/\S+/g, ' ');
-
-                    const words = text.toLowerCase().match(/[a-z0-9']+/g);
-                    if(!words) continue;
-                    for(const w of words) {
-                        if(blacklistSet.has(w)) continue;
-                        counts.set(w, (counts.get(w) || 0) + 1);
-                    }
-                }
-
-                const last = fetched.last();
-                if(!last) break;
-                if(last.createdAt < oneMonthAgo) break;
-                lastId = last.id;
-                if(fetched.size < 100) break;
-            }
-
-            const sorted = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
-            const top = sorted.slice(0, limit);
-
-            if(top.length === 0) return ctx.reply('No words found in the last month for that channel.');
-
-            const description = top.map((t, i) => `**${i + 1}.** ${t[0]} — ${t[1]}`).join('\n');
             const embed = new EmbedBuilder()
-                .setTitle(`Most said words in #${channel.name} (last month)`)
+                .setAuthor({ name: title })
                 .setColor(mainColor)
                 .setDescription(description)
-                .setTimestamp();
+                .setFooter({ text: `Scanned ${collected.length} messages` });
 
-            return ctx.reply({ embeds: [ embed ] });
-        } catch (err) {
-            console.error(err);
-            return ctx.reply({ embeds: [ getUnexpectedErrorEmbed() ] });
+            return ctx.reply({ embeds: [embed] });
+        } catch (error) {
+            console.error(error);
+            await ctx.reply({ embeds: [getUnexpectedErrorEmbed()] });
         }
     }
 }
