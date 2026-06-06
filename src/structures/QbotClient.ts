@@ -44,6 +44,7 @@ class QbotClient extends Client {
             }
 
             if(config.status !== 'online') this.user.setStatus(config.status);
+            console.log({ done: ["QBot is online!", "QBot is online!"] });
         });
     }
 
