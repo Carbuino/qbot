@@ -1,6 +1,7 @@
 import { discordClient, robloxClient, robloxGroup } from '../../main.ts';
 import { CommandContext } from '../../structures/addons/CommandAddons.ts';
 import { Command } from '../../structures/Command.ts';
+import { EmbedBuilder } from 'discord.js';
 import {
     getInvalidRobloxUserEmbed,
     getRobloxUserIsNotMemberEmbed,
@@ -12,6 +13,7 @@ import {
     getInvalidXPEmbed,
     getNoRankupAvailableEmbed,
     getSuccessfulXPAndRankChangeEmbed,
+    infoIconUrl
 } from '../../handlers/locale.ts';
 import { checkActionEligibility } from '../../handlers/verificationChecks.ts';
 import { config } from '../../config.ts';
