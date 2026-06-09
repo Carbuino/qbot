@@ -1,5 +1,5 @@
-import type { GroupMember, GroupRole } from '../structures/types';
-import { config } from '../config';
+import type { GroupMember, GroupRole } from '../structures/types.d.ts';
+import { config } from '../config.ts';
 
 const findEligibleRole = async (member: GroupMember, roles: GroupRole[], xp: number): Promise<GroupRole | null> => {
     const xpRoles = config.xpSystem?.roles || [];
