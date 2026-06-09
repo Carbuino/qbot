@@ -5,6 +5,7 @@
   "type": "module",
   "main": "src/main.ts",
   "scripts": {
+    "prestart": "prisma migrate deploy --schema=src/database/schema.prisma",
     "start": "tsx src/main.ts",
     "build": "tsc --outDir dist",
     "dev": "nodemon src/main.ts --ignore ./src/resources/commands.json",

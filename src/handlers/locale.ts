@@ -109,12 +109,12 @@ export const getNoJoinRequestEmbed = (): EmbedBuilder => {
     return embed;
 }
 
-export const getSuccessfulAddingAndRankupEmbed = async(user: User | PartialUser, newRole: string, xpChange: string): Promise<EmbedBuilder> => {
+export const getSuccessfulXPAndRankChangeEmbed = async(user: User | PartialUser, newRole: string, xpChange: string): Promise<EmbedBuilder> => {
     const embed = new EmbedBuilder()
         .setAuthor({ name: 'Success!', iconURL: checkIconUrl })
         .setColor(greenColor)
         .setThumbnail((await getHeadshotImage(user.id)).imageUrl)
-        .setDescription(`**${user.name}** has been given **${xpChange}** XP and has been promoted to **${newRole}**, becuase they had enough XP!`)
+        .setDescription(`**${user.name}** has been given **${xpChange}** XP and has been ${xpChange.startsWith('-') ? 'demoted' : 'promoted'} to **${newRole}**, because they had enough XP!`)
 
     return embed
 }

@@ -8,7 +8,7 @@ import {
     getNoRankAboveEmbed,
     getRoleNotFoundEmbed,
     getVerificationChecksFailedEmbed,
-    getSuccessfulXPRankupEmbed,
+    getSuccessfulXPAndRankChangeEmbed,
     getNoRankupAvailableEmbed,
     getNoPermissionEmbed,
 } from '../../handlers/locale.ts';
@@ -18,7 +18,7 @@ import type { User, PartialUser, GroupMember } from '../../structures/types.d.ts
 import { logAction } from '../../handlers/handleLogging.ts';
 import { getLinkedRobloxUser } from '../../handlers/accountLinks.ts';
 import { provider } from '../../database/index.ts';
-import { findEligibleRole } from '../../handlers/handleXpRankup.ts';
+import { findEligibleRole } from '../../handlers/handleXpRankChange.ts';
 
 class XPRankupCommand extends Command {
     constructor() {
@@ -92,7 +92,7 @@ class XPRankupCommand extends Command {
 
         try {
             await robloxGroup.updateMember(robloxUser.id, role.id);
-            ctx.reply({ embeds: [ await getSuccessfulXPRankupEmbed(robloxUser, role.name) ]});
+            ctx.reply({ embeds: [ await getSuccessfulXPAndRankChangeEmbed(robloxUser, role.name) ]});
             logAction('XP Rankup', ctx.user, null, robloxUser, `${robloxMember.role.name} (${robloxMember.role.rank}) ? ${role.name} (${role.rank})`);
         } catch (err) {
             console.log(err);

@@ -5,10 +5,13 @@ import {
     getInvalidRobloxUserEmbed,
     getRobloxUserIsNotMemberEmbed,
     getUnexpectedErrorEmbed,
+    getNoRankAboveEmbed,
+    getRoleNotFoundEmbed,
     getVerificationChecksFailedEmbed,
     getSuccessfulXPChangeEmbed,
     getInvalidXPEmbed,
-    getSuccessfulDemotionEmbed,
+    getNoRankupAvailableEmbed,
+    getSuccessfulXPAndRankChangeEmbed,
 } from '../../handlers/locale.ts';
 import { checkActionEligibility } from '../../handlers/verificationChecks.ts';
 import { config } from '../../config.ts';
@@ -16,66 +19,55 @@ import type { User, PartialUser, GroupMember, GroupRole } from '../../structures
 import { logAction } from '../../handlers/handleLogging.ts';
 import { getLinkedRobloxUser } from '../../handlers/accountLinks.ts';
 import { provider } from '../../database/index.ts';
+import { findEligibleRole } from '../../handlers/handleXpRankChange.ts';
 
-type XPResult = {
-    user: User | PartialUser;
-    previousXp: number;
-    xp: number;
-    rankupRole?: GroupRole;
-    demotionProtected?: boolean;
-};
-
-const splitUserQueries = (value: unknown): string[] => {
-    return String(value || '')
-        .split(/\s+/)
-        .map((query) => query.trim())
-        .filter(Boolean);
-};
-
-const formatList = (items: string[]): string => {
-    const visible = items.slice(0, 15);
-    const hiddenCount = items.length - visible.length;
-    return `${visible.map((item) => `- ${item}`).join('\n')}${hiddenCount > 0 ? `\n- ...and ${hiddenCount} more` : ''}`;
-};
-
-class RemoveXPCommand extends Command {
-    constructor() {
-        super({
-            trigger: 'removexp',
-            description: 'Removes XP from one or more users.',
-            type: 'ChatInput',
-            module: 'xp',
-            args: [
-                {
-                    trigger: 'roblox-user',
-                    description: 'Who do you want to remove XP from? Separate multiple users with spaces.',
-                    autocomplete: true,
-                    type: 'RobloxUser',
-                },
-                {
-                    trigger: 'decrement',
-                    description: 'How much XP would you like to remove?',
-                    type: 'Number',
-                },
-                {
-                    trigger: 'reason',
-                    description: 'If you would like a reason to be supplied in the logs, put it here.',
-                    isLegacyFlag: true,
-                    required: false,
-                    type: 'String',
-                },
-            ],
-            permissions: [
-                {
-                    type: 'role',
-                    ids: config.permissions.users,
-                    value: true,
-                }
-            ]
-        });
+const getUserXPChangeEmbed = ( successes: XPResult[], failures: XPResult[] ): EmbedBuilder => {
+    let increment: number;
+    
+    if (successes.length === 0) {
+        increment = 0;
+    } else {
+        increment = successes[0].previousXp! - successes[0].xp!;
     }
 
-    async resolveRobloxUser(query: string): Promise<User | PartialUser> {
+    let description = '';
+    
+    // Sucessful XP Removals
+    if(successes.length > 0) {
+        description = `Removed ${increment} XP from ${successes.length} user${successes.length === 1 ? '' : 's'}:\n`;
+        for (const user of successes) {
+            description += `- ${user.robloxUser?.name || user.username}: ${user.previousXp} → ${user.xp}\n`;
+        }
+        description += '\n';
+
+        // Rank Changes
+        const rankdowns = successes.filter((result) => result.newRole);
+        if(rankdowns.length > 0) {
+            description += `Deranked ${rankdowns.length} user${rankdowns.length === 1 ? '' : 's'}:\n`;
+            for (const user of rankdowns) {
+                description += `- ${user.robloxUser?.name || user.username}: ${user.oldRole?.name} → ${user.newRole?.name}\n`;
+            }
+            description += '\n';
+        }
+    }
+
+    // Failures
+    if(failures.length > 0) {
+        description += `Skipped ${failures.length} user${failures.length === 1 ? '' : 's'}:\n`;
+        for (const user of failures) {
+            description += `- ${user.robloxUser?.name || user.username}: ${user.message}\n`;
+        }
+    }
+
+    const embed = new EmbedBuilder()
+        .setAuthor({ name: 'XP Remove Results', iconURL: infoIconUrl })
+        .setColor('#906FED')
+        .setDescription(description);
+
+    return embed;
+}
+
+async function resolveRobloxUser(query: string): Promise<User | PartialUser> {
         try {
             if(/^\d+$/.test(query)) {
                 return await robloxClient.getUser(Number(query));
@@ -100,119 +92,171 @@ class RemoveXPCommand extends Command {
         throw new Error('Invalid Roblox user.');
     }
 
+type XPResult = {
+    username: string;
+    robloxUser?: User | PartialUser;
+    previousXp?: number;
+    xp?: number;
+    oldRole?: GroupRole;
+    newRole?: GroupRole;
+    message?: string;
+};
+
+
+class RemoveXPCommand extends Command {
+    constructor() {
+        super({
+            trigger: 'removexp',
+            description: 'Removes XP from one or more users.',
+            type: 'ChatInput',
+            module: 'xp',
+            args: [
+                {
+                    trigger: 'roblox-user',
+                    description: 'Who do you want to remove XP from? Separate multiple users with spaces.',
+                    autocomplete: true,
+                    type: 'RobloxUser',
+                },
+                {
+                    trigger: 'increment',
+                    description: 'How much XP would you like to remove?',
+                    type: 'Number',
+                },
+                {
+                    trigger: 'reason',
+                    description: 'If you would like a reason to be supplied in the logs, put it here.',
+                    isLegacyFlag: true,
+                    required: false,
+                    type: 'String',
+                },
+            ],
+            permissions: [
+                {
+                    type: 'role',
+                    ids: config.permissions.users,
+                    value: true,
+                }
+            ]
+        });
+    }
+
     async run(ctx: CommandContext) {
-        const decrement = Number(ctx.args['decrement']);
-        if(!Number.isInteger(decrement) || decrement < 0) return ctx.reply({ embeds: [ getInvalidXPEmbed() ] });
-
-        const userQueries = splitUserQueries(ctx.args['roblox-user']);
-        if(userQueries.length === 0) return ctx.reply({ embeds: [ getInvalidRobloxUserEmbed() ]});
-        if(userQueries.length > 1) await ctx.defer();
-
+        ctx.defer();
         const successes: XPResult[] = [];
-        const failures: string[] = [];
-        let groupRoles: GroupRole[];
+        const failures: XPResult[] = [];
+        let increment = Number(ctx.args['increment']);
+        
 
-        try {
-            groupRoles = await robloxGroup.getRoles();
-        } catch (err) {
-            console.log(err);
-            return ctx.reply({ embeds: [ getUnexpectedErrorEmbed() ]});
-        }
-
-        for (const userQuery of userQueries) {
+        async function processUser(user: string) {
             let robloxUser: User | PartialUser;
+
+            // Resolve the Roblox user
             try {
-                robloxUser = await this.resolveRobloxUser(userQuery);
+                robloxUser = await resolveRobloxUser(user);
             } catch (err) {
-                failures.push(`${userQuery}: invalid Roblox user`);
-                continue;
+                failures.push({ username: user, message: 'Invalid Roblox user' });
+                return;
             }
 
+            // Check if the user is in the group
             let robloxMember: GroupMember;
             try {
                 robloxMember = await robloxGroup.getMember(robloxUser.id);
                 if(!robloxMember) throw new Error();
             } catch (err) {
-                failures.push(`${robloxUser.name}: not in the Roblox group`);
-                continue;
+                failures.push({ username: user, message: 'Not in Group' });
+                return;
             }
-
+            
+            // If enabled, check if the verification checks pass
             if(config.verificationChecks) {
                 const actionEligibility = await checkActionEligibility(ctx.user.id, ctx.guild.id, robloxMember, robloxMember.role.rank);
                 if(!actionEligibility) {
-                    failures.push(`${robloxUser.name}: verification checks failed`);
-                    continue;
-                }
-            }
-
+                    failures.push({ username: user, message: 'Verification Checks Failed' });
+                    return getVerificationChecksFailedEmbed()
+                };
+            };
+            
+            // Update the user's XP
             const userData = await provider.findUser(robloxUser.id.toString());
-            const previousXp = Number(userData.xp);
-            const actualRemoved = Math.min(decrement, previousXp);
-            const xp = previousXp - actualRemoved;
-            await provider.updateUser(robloxUser.id.toString(), { xp });
+            const newXP = Number(userData.xp) - increment;
+            await provider.updateUser(robloxUser.id.toString(), { xp: newXP });
+            logAction('Remove XP', ctx.user, ctx.args['reason'], robloxUser, null, null, null, `${userData.xp} → ${newXP} (-${increment})`);
+            
+            // Derank Check
+            const groupRoles = await robloxGroup.getRoles();
+            const role = await findEligibleRole(robloxMember, groupRoles, newXP);
 
-            const result: XPResult = { user: robloxUser, previousXp, xp };
-
-            // Determine if a demotion is required based on the new XP.
-            try {
-                // Find the configured role which matches the new XP (highest xp threshold <= xp)
-                const sortedXpRoles = config.xpSystem.roles.slice().sort((a, b) => b.xp - a.xp);
-                const matchingRoleCfg = sortedXpRoles.find((r) => xp >= r.xp);
-                const targetRole = matchingRoleCfg ? groupRoles.find((gr) => gr.rank === matchingRoleCfg.rank) : null;
-
-                // Protect staff whose current rank is higher than any rank attainable via XP
-                const xpRoles = config.xpSystem?.roles || [];
-                const maxXpRoleRank = xpRoles.length ? Math.max(...xpRoles.map((r) => r.rank)) : 0;
-                if (robloxMember.role.rank > maxXpRoleRank) {
-                    // Do not demote staff above the XP system's max rank — mark as protected
-                    result.demotionProtected = true;
-                } else if (targetRole && targetRole.rank < robloxMember.role.rank) {
-                    try {
-                        await robloxGroup.updateMember(robloxUser.id, targetRole.id);
-                        result.rankupRole = targetRole;
-                        logAction('XP Rankdown', ctx.user, null, robloxUser, `${robloxMember.role.name} (${robloxMember.role.rank}) -> ${targetRole.name} (${targetRole.rank})`);
-                    } catch (err) {
-                        console.log(err);
-                        failures.push(`${robloxUser.name}: XP removed, but rankdown failed`);
-                    }
+            
+            if (role) {
+                // Can Derank
+                try {
+                    await robloxGroup.updateMember(robloxUser.id, role.id);
+                    successes.push({ 
+                        username: user, 
+                        robloxUser, 
+                        previousXp: userData.xp, 
+                        xp: newXP,
+                        oldRole: robloxMember.role,
+                        newRole: role 
+                    });
+                    logAction('XP Rankdown', ctx.user, null, robloxUser, `${robloxMember.role.name} (${robloxMember.role.rank}) → ${role.name} (${role.rank})`);
+                
+                // Failed to derank
+                } catch (err) {
+                    console.log(err);
+                    successes.push({ 
+                        username: user, 
+                        robloxUser, 
+                        previousXp: userData.xp, 
+                        xp: newXP, 
+                        oldRole: robloxMember.role,
+                        newRole: role, 
+                        message: 'XP removed but failed to derank' 
+                    });
                 }
-            } catch (err) {
-                console.log(err);
-            }
+            
+            // XP removed, no derank
+            } else {
+                successes.push({ 
+                    username: user, 
+                    robloxUser,
+                    previousXp: userData.xp,
+                    xp: newXP
+                });
 
-            try {
-                logAction('Remove XP', ctx.user, ctx.args['reason'], robloxUser, null, null, null, `${previousXp} -> ${xp} (-${actualRemoved})`);
-            } catch (err) {
-                console.log(err);
             }
-
-            successes.push(result);
         }
 
-        if(userQueries.length === 1 && successes.length === 1 && failures.length === 0) {
+        let users = ctx.args['roblox-user'].split(' ')
+
+        // Valid XP increment must be a non-negative integer
+        if( !Number.isInteger(Number(ctx.args['increment'])) || Number(ctx.args['increment']) < 0) 
+            return ctx.reply({ embeds: [ getInvalidXPEmbed() ] });
+        
+        // Loop through Users
+        for (const user of users) {
+            if (user == '') continue;
+            let result = await processUser(user);
+
+            if (result) {
+                return ctx.reply({ embeds: [ result ] });
+            }
+        }
+
+        // Normal Case if 1 user
+        if(successes.length === 1 && failures.length === 0) {
             const result = successes[0];
-            if(result.rankupRole) {
-                return ctx.reply({ embeds: [ await getSuccessfulDemotionEmbed(result.user, result.rankupRole.name) ]});
+
+            if(result.newRole) {
+                return ctx.reply({ embeds: [ await getSuccessfulXPAndRankChangeEmbed(result.robloxUser, result.newRole.name, `-${increment.toString()}`) ]});
             }
 
-            return ctx.reply({ embeds: [ await getSuccessfulXPChangeEmbed(result.user, result.xp) ]});
+            return ctx.reply({ embeds: [ await getSuccessfulXPChangeEmbed(result.robloxUser, result.xp) ]});
         }
 
-        const summary: string[] = [];
-        if(successes.length > 0) {
-            summary.push(`Removed ${decrement} XP from ${successes.length} user${successes.length === 1 ? '' : 's'}:\n${formatList(successes.map((result) => `${result.user.name}: ${result.previousXp} -> ${result.xp}${result.demotionProtected ? ' (demotion protected)' : ''}`))}`);
-        }
-
-        const rankdowns = successes.filter((result) => result.rankupRole);
-        if(rankdowns.length > 0) {
-            summary.push(`Demoted ${rankdowns.length} user${rankdowns.length === 1 ? '' : 's'}:\n${formatList(rankdowns.map((result) => `${result.user.name} -> ${result.rankupRole.name}`))}`);
-        }
-
-        if(failures.length > 0) {
-            summary.push(`Skipped ${failures.length} user${failures.length === 1 ? '' : 's'}:\n${formatList(failures)}`);
-        }
-
-        return ctx.reply({ content: summary.join('\n\n').slice(0, 1900) });
+        // Return Multiuser Rankdown
+        return ctx.reply({ embeds: [ getUserXPChangeEmbed(successes, failures) ] });
     }
 }
 
