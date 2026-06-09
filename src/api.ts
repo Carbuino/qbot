@@ -4,7 +4,7 @@ import { provider } from './database/index.ts';
 import { logAction } from './handlers/handleLogging.ts';
 import { robloxClient, robloxGroup } from './main.ts';
 import ms from 'ms';
-import { findEligibleRole } from './handlers/handleXpRankup.ts';
+import { findEligibleRole } from './handlers/handleXpRankChange.ts';
 import 'dotenv/config';
 const app = express();
 
