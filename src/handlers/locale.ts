@@ -543,9 +543,9 @@ export const getNotSuspendedEmbed = (): EmbedBuilder => {
 
 export const getMemberCountMessage = (oldCount: number, newCount: number): string => {
     if(newCount > oldCount) {
-        return `?? The member count is now **${newCount}** (+${newCount - oldCount})`;
+        return `⬆️ The member count is now **${newCount}** (+${newCount - oldCount})`;
     } else {
-        return `?? The member count is now **${newCount}** (-${oldCount - newCount})`;
+        return `⬇️ The member count is now **${newCount}** (-${oldCount - newCount})`;
     }
 }
 
@@ -553,7 +553,7 @@ export const getMemberCountMilestoneEmbed = (count: number): EmbedBuilder => {
     const embed = new EmbedBuilder()
     .setAuthor({ name: 'Member Milestone Reached!', iconURL: checkIconUrl })
         .setColor(greenColor)
-        .setDescription(`?? The member count is now **${count}**!`);
+        .setDescription(`🎉 The member count is now **${count}**!`);
 
     return embed;
 }
